@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Studio</title>
+<link rel="stylesheet" href="css/01-estilo.css">
+  <!-- PWA:inicio (gerado pelo Mini SK — pode refazer no painel 📱 PWA) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00ffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AI">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <script>
+    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+      addEventListener('load', function () { navigator.serviceWorker.register('service-worker.js').catch(function (e) { console.warn('Service worker:', e); }); });
+    }
+  </script>
+  <!-- PWA:fim -->
+</head>
+<body>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div id="sidebar-header">
+      <span>🤖</span>
+      <h1>AI Studio</h1>
+      <button id="btn-novo-chat" title="Novo chat">+ Novo</button>
+    </div>
+    <div id="lista-chats"></div>
+    <div id="sidebar-footer">
+      <button class="btn-sidebar" id="btn-exportar-chat">📥 Exportar conversa</button>
+      <button class="btn-sidebar" id="btn-importar-chat">📤 Importar conversa</button>
+      <button class="btn-sidebar" id="btn-abrir-config">⚙️ Configurações</button>
+    </div>
+  </aside>
+
+  <!-- OVERLAY MOBILE -->
+  <div id="overlay-sidebar"></div>
+
+  <!-- MAIN -->
+  <main id="main">
+
+    <!-- TOPBAR -->
+    <div id="topbar">
+      <button id="btn-menu" title="Menu">☰</button>
+      <select id="select-modelo" title="Modelo de IA"></select>
+      <div id="info-tokens">
+        <span id="badge-tokens" class="badge-custo" style="display:none">0 tokens</span>
+      </div>
+      <button id="btn-config" title="Configurações">⚙️</button>
+    </div>
+
+    <!-- MENSAGENS -->
+    <div id="mensagens">
+      <!-- Tela vazia inicial -->
+      <div id="tela-vazia">
+        <div class="icone">⚡</div>
+        <h2>AI Studio</h2>
+        <p>Chat leve e econômico com suporte a múltiplas IAs</p>
+        <div class="sugestoes-grid">
+          <button class="sugestao-btn" data-texto="Resuma este texto jurídico para mim:">📄 Resumir texto</button>
+          <button class="sugestao-btn" data-texto="Analise este documento e aponte os pontos principais:">🔍 Analisar documento</button>
+          <button class="sugestao-btn" data-texto="Corrija e melhore este texto:">✏️ Corrigir texto</button>
+          <button class="sugestao-btn" data-texto="Explique de forma simples:">💡 Explicar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+    <div id="input-area">
+      <div id="fila-anexos"></div>
+      <div id="barra-input">
+        <button id="btn-anexar" title="Anexar arquivo/imagem">📎</button>
+        <input type="file" id="input-arquivo" multiple
+          accept="image/*,.pdf,.txt,.md,.js,.ts,.jsx,.tsx,.html,.css,.json,.xml,.csv,.zip,.py,.java,.c,.cpp,.cs,.php,.rb,.go,.rs,.sql">
+        <textarea id="campo-texto" placeholder="Digite sua mensagem..." rows="1"></textarea>
+        <button id="btn-voz" title="Falar">🎤</button>
+        <button id="btn-enviar" title="Enviar">➤</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PAINEL DE CONFIGURAÇÕES -->
+  <aside id="painel-config">
+    <div id="config-header">
+      <h2>⚙️ Configurações</h2>
+      <button id="btn-fechar-config">✕</button>
+    </div>
+    <div id="config-corpo">
+
+      <div class="config-secao">
+        <h3>🔑 Chaves de API</h3>
+        <div class="config-campo">
+          <label>Monica / OpenAI (sk-...)</label>
+          <input type="password" id="cfg-chave-openai" placeholder="sk-...">
+        </div>
+        <div class="config-campo">
+          <label>Google Gemini</label>
+          <input type="password" id="cfg-chave-gemini" placeholder="AIza...">
+        </div>
+        <div class="config-campo">
+          <label>Anthropic Claude</label>
+          <input type="password" id="cfg-chave-claude" placeholder="sk-ant-...">
+        </div>
+        <div class="config-campo">
+          <label>Ollama (URL local)</label>
+          <input type="text" id="cfg-url-ollama" placeholder="http://localhost:11434">
+        </div>
+        <button class="btn-config-acao" id="btn-salvar-chaves">💾 Salvar chaves</button>
+        <button class="btn-config-acao" id="btn-testar-conexao">🔌 Testar conexão</button>
+      </div>
+
+      <div class="config-secao">
+        <h3>🧠 Comportamento</h3>
+        <div class="config-campo">
+          <label>Instrução do sistema (prompt)</label>
+          <textarea id="cfg-system-prompt" placeholder="Você é um assistente jurídico especializado..."></textarea>
+        </div>
+        <div class="config-campo">
+          <label>Temperatura: <span id="cfg-temp-val">0.7</span></label>
+          <input type="range" id="cfg-temperatura" min="0" max="2" step="0.1" value="0.7">
+        </div>
+        <div class="config-campo">
+          <label>Máx. tokens resposta</label>
+          <input type="number" id="cfg-max-tokens" value="2048" min="256" max="8192" step="256">
+        </div>
+        <div class="config-linha">
+          <label>Memória de contexto (últimas mensagens)</label>
+          <input type="number" id="cfg-contexto" value="10" min="2" max="50" style="width:60px">
+        </div>
+      </div>
+
+      <div class="config-secao">
+        <h3>🖼️ Imagens</h3>
+        <div class="config-linha">
+          <label>Comprimir imagens antes de enviar</label>
+          <div class="toggle ativo" id="toggle-comprimir"></div>
+        </div>
+        <div class="config-campo">
+          <label>Qualidade da compressão: <span id="cfg-qualidade-val">80</span>%</label>
+          <input type="range" id="cfg-qualidade" min="30" max="100" step="5" value="80">
+        </div>
+        <div class="config-campo">
+          <label>Tamanho máximo (px)</label>
+          <select id="cfg-tamanho-img">
+            <option value="512">512px (mais leve)</option>
+            <option value="768">768px</option>
+            <option value="1024" selected>1024px (padrão)</option>
+            <option value="1536">1536px</option>
+            <option value="2048">2048px (original)</option>
+          </select>
+        </div>
+        <div class="config-linha">
+          <label>Se IA não suporta visão → descrever em texto</label>
+          <div class="toggle ativo" id="toggle-fallback-img"></div>
+        </div>
+      </div>
+
+      <div class="config-secao">
+        <h3>🔧 Dados</h3>
+        <button class="btn-config-acao" id="btn-exportar-config">📤 Exportar configurações</button>
+        <button class="btn-config-acao" id="btn-importar-config">📥 Importar configurações</button>
+        <button class="btn-config-acao perigo" id="btn-limpar-chats">🗑️ Apagar todos os chats</button>
+        <button class="btn-config-acao perigo" id="btn-limpar-tudo">⚠️ Resetar tudo</button>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox"><img id="lightbox-img" src="" alt=""></div>
+
+  <!-- TOAST -->
+  <div id="toast"></div>
+
+  <!-- INPUT OCULTO IMPORTAR -->
+  <input type="file" id="input-importar-chat" accept=".json" style="display:none">
+  <input type="file" id="input-importar-config" accept=".json" style="display:none">
+
+</div>
+<!-- FIM PARTE 1 — cole a PARTE 2 abaixo desta linha -->
+<!-- ═══════════════════════════════════════
+     PARTE 2 — UTILITÁRIOS + STORAGE
+═══════════════════════════════════════ -->
+<script src="js/01-const-id-document-getelementby.js"></script>
+<script src="js/02-const-id-document-getelementby.js"></script>
+<script src="js/03-const-db.js"></script>
+<!-- FIM PARTE 2 — cole a PARTE 3 abaixo desta linha -->
+<!-- ═══════════════════════════════════════
+     PARTE 3 — PROVEDORES + IA
+═══════════════════════════════════════ -->
+<script src="js/04-function-detectarprovedor-chav.js"></script>
+<script src="js/05-openai-monica-groq-deepseek-op.js"></script>
+<script src="js/06-openai-monica-groq-deepseek-op.js"></script>
+<script src="js/07-async-function-chamaria-proved.js"></script>
+<script src="js/08-const-provedores.js"></script>
+<!-- FIM PARTE 3 — cole a PARTE 4 abaixo desta linha -->
+<!-- ═══════════════════════════════════════
+     PARTE 4 — IMAGEM + ARQUIVO + ZIP
+═══════════════════════════════════════ -->
+<script src="js/09-comprime-imagem-e-retorna-base.js"></script>
+<script src="js/10-detectar-encoding-e-ler-arquiv.js"></script>
+<script src="js/11-ler-zip-sem-biblioteca-externa.js"></script>
+<script src="js/12-async-function-processaranexo-.js"></script>
+<script src="js/13-async-function-montarmensagemc.js"></script>
+<!-- FIM PARTE 4 — cole a PARTE 5 abaixo desta linha -->
+<!-- ═══════════════════════════════════════
+     PARTE 5 — CÉREBRO DO CHAT + CONTEXTO
+═══════════════════════════════════════ -->
+<script src="js/14-function-criarchat.js"></script>
+<script src="js/15-function-montarcontexto-chat-n.js"></script>
+<script src="js/16-async-function-enviarmensagem-.js"></script>
+<script src="js/17-function-exportarchat.js"></script>
+<script src="js/18-function-exportarconfig.js"></script>
+<script src="js/19-const-app.js"></script>
+<!-- FIM PARTE 5 — cole a PARTE 6 abaixo desta linha -->
+<!-- ═══════════════════════════════════════
+     PARTE 6 — INTERFACE + EVENTOS + INIT
+═══════════════════════════════════════ -->
+<script src="js/20-function-renderizarmensagem-ms.js"></script>
+<script src="js/21-async-function-abrirchat-id.js"></script>
+<script src="js/22-function-togglesidebar.js"></script>
+<script src="js/23-function-abrirconfig.js"></script>
+<script src="js/24-async-function-popularselectmo.js"></script>
+<script src="js/25-function-adicionaranexoui-anex.js"></script>
+<script src="js/26-let-reconhecimento-null.js"></script>
+<script src="js/27-function-ajustaralturacampo.js"></script>
+<script src="js/28-function-registrareventos.js"></script>
+<script src="js/29-function-enviarmensagemui.js"></script>
+<script src="js/30-async-function-init.js"></script>
+<script src="js/31-let-reconhecimento-null.js"></script>
+<script src="js/32-async-function-init.js"></script>
+</body>
+</html>
