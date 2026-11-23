@@ -1,0 +1,51 @@
+{
+  "name": "index-1-modular-ai",
+  "version": "1.0.0",
+  "description": "Index (1)-modular (Ai)",
+  "author": "Maikon",
+  "private": true,
+  "main": "electron/main.cjs",
+  "portaDoPrograma": 7842,
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.maikonadvogadomgalt.index1modular.nai.pc",
+    "productName": "Index (1)-modular (Ai)",
+    "executableName": "index-1-modular-ai",
+    "directories": {
+      "output": "release"
+    },
+    "asar": false,
+    "files": [
+      "**/*",
+      "!android/**",
+      "!.github/**",
+      "!release/**",
+      "!exe/**",
+      "!node_modules/.cache/**",
+      "!*.zip",
+      "!.sk/**",
+      "!apk.config.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "icons/icon-512.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Index (1)-modular (Ai)",
+      "artifactName": "index-1-modular-ai-Instalar.exe"
+    },
+    "portable": {
+      "artifactName": "index-1-modular-ai-sem-instalar.exe"
+    }
+  }
+}
